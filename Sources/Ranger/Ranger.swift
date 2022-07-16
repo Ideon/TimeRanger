@@ -139,9 +139,35 @@ extension Operation {
 
 func parseRange(expression: String, relativeTo date: Date = .init(), direction: Directionality = .past, calendar: Calendar = .current) throws -> Date {
 
-  var currentDirection = direction
-
+    //  var currentDirection = direction
   // Split by operators and whitespaces
 
   throw RangeParserError(expression: expression, type: .incomplete)
+}
+
+protocol TimeTraverser {
+
+  func date(byAdding unit: Unit, value: Int, to date: Date) throws -> Date
+  func startOf(_ unit: Unit, for date: Date) throws -> Date
+
+}
+
+extension Calendar: TimeTraverser {
+
+  func date(byAdding unit: Unit, value: Int, to date: Date) throws -> Date {
+    guard let result = self.date(byAdding: unit.component, value: value, to: date)
+    else { throw ParseError.arithmeticFailure }
+    return result
+  }
+
+  func startOf(_ unit: Unit, for date: Date) throws -> Date {
+    let components = dateComponents([unit.component], from: date)
+    let startingDate = try self.date(byAdding: unit, value: -1, to: date)
+    guard let result = nextDate(after: startingDate, matching: components, matchingPolicy: .nextTime, repeatedTimePolicy: .first, direction: .forward)
+    else {
+      throw ParseError.arithmeticFailure
+    }
+    return result
+  }
+
 }

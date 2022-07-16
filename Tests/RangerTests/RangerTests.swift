@@ -31,6 +31,52 @@ final class RangerTests: XCTestCase {
     }
   }
 
+  func testStartOfUnit() throws {
+    let referenceDate = "2010-04-15 12:35:17".dateValue! // A Thursday
+    var calendar = Calendar.current
+    calendar.firstWeekday = 2
+
+    let battery: [(Ranger.Unit, String)] = [
+      (.day, "2010-04-15 00:00:00"),
+      (.hour, "2010-04-15 12:00:00"),
+      (.minute, "2010-04-15 12:35:00"),
+      (.week, "2010-04-12 00:00:00"),
+      (.year, "2010-01-01 00:00:00"),
+      (.month, "2010-04-01 00:00:00"),
+    ]
+
+    for (unit, expected) in battery {
+      let result = try? calendar.startOf(unit, for: referenceDate)
+      XCTAssertEqual(result, expected.dateValue!, "Start of '\(unit)' did not yield expected result")
+    }
+  }
+
+  func testDateByAddingUnit() throws {
+    let referenceDate = "2010-04-15 12:35:17".dateValue! // A Thursday
+    let calendar = Calendar.current
+
+    let battery: [(Ranger.Unit, Int, String)] = [
+
+      (.hour, 1, "2010-04-15 13:35:17"),
+      (.minute, 1 ,"2010-04-15 12:36:17"),
+      (.minute, 52, "2010-04-15 13:27:17"),
+
+      (.second, -1, "2010-04-15 12:35:16"),
+      (.second, -17, "2010-04-15 12:35:00"),
+      (.second, -18, "2010-04-15 12:34:59"),
+      (.second, 1, "2010-04-15 12:35:18"),
+      (.second, 55,"2010-04-15 12:36:12"),
+
+      (.week, -1, "2010-04-08 12:35:17"),
+      (.week, 1, "2010-04-22 12:35:17"),
+    ]
+
+    for (unit, value, expected) in battery {
+      let result = try? calendar.date(byAdding: unit, value: value, to: referenceDate)
+      XCTAssertEqual(result, expected.dateValue!, "Adding \(value) '\(unit)' did not yield expected result")
+    }
+  }
+
   func testParseSegment() throws {
 
     let both = [Directionality.past, Directionality.future]
@@ -85,7 +131,7 @@ final class RangerTests: XCTestCase {
     "d< & 5m" Range from start of today to five minutes before midnight
 
      */
-    
+
     var calendar = Calendar.current
     calendar.firstWeekday = 2
 
