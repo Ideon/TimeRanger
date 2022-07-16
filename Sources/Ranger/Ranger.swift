@@ -60,7 +60,7 @@ enum Operation: String {
   case skipForward = ">"
 }
 
-func parseRange(segment: String, relativeTo date: Date, direction: Directionality, calendar: Calendar = .current) throws -> Date {
+func parseRange(segment: String, relativeTo date: Date, direction: Directionality, calendar: TimeTraverser = Calendar.current) throws -> Date {
 
   var real = ""
 
@@ -76,20 +76,14 @@ func parseRange(segment: String, relativeTo date: Date, direction: Directionalit
   let operation = iterator.next().map { Operation(rawValue: String($0)) ?? .none } ?? Operation.none
   let magnitude = Int(real) ?? 0
 
-  guard let result = calendar.date(byAdding: unit.component, value: magnitude * direction.factor, to: date)
-
-  else {
-    throw RangeSegmentParserError(segment: segment, type: .arithmeticFailure)
-  }
-
   do {
+    let result = try calendar.date(byAdding: unit, value: magnitude * direction.factor, to: date)
     return try operation.apply(for: unit, to: result, calendar: calendar)
   } catch (let error as ParseError) {
     throw RangeSegmentParserError(segment: segment, type: error)
   } catch {
     throw error
   }
-
 }
 
 extension Unit {
@@ -111,26 +105,14 @@ extension Unit {
 
 extension Operation {
 
-  func apply(for unit: Unit, to date: Date, calendar: Calendar) throws -> Date {
+  func apply(for unit: Unit, to date: Date, calendar: TimeTraverser) throws -> Date {
     if self == .none { return date }
-
-    let components = calendar.dateComponents([unit.component], from: date)
-
-    let referenceDate = calendar.date(byAdding: unit.component, value: -1, to: date)!
-
-    guard var result = calendar.nextDate(after: referenceDate, matching: components, matchingPolicy: .nextTime, repeatedTimePolicy: .first, direction: .forward)
-    else {
-      throw ParseError.arithmeticFailure
-    }
-
+    let start = try calendar.startOf(unit, for: date)
     if self == .skipForward {
-      guard let forwardedResult = calendar.date(byAdding: unit.component, value: 1, to: result) else {
-        throw ParseError.arithmeticFailure
-      }
-      result = forwardedResult
+      return try calendar.date(byAdding: unit, value: 1, to: start)
+    } else {
+      return start
     }
-
-    return result
   }
 
 }
