@@ -84,8 +84,8 @@ final class RangerTests: XCTestCase {
     "d< ~ 5m" Range from start of today to five minutes after midnight
     "d< & 5m" Range from start of today to five minutes before midnight
 
-
      */
+    
     var calendar = Calendar.current
     calendar.firstWeekday = 2
 

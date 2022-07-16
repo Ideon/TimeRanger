@@ -134,3 +134,14 @@ extension Operation {
   }
 
 }
+
+
+
+func parseRange(expression: String, relativeTo date: Date = .init(), direction: Directionality = .past, calendar: Calendar = .current) throws -> Date {
+
+  var currentDirection = direction
+
+  // Split by operators and whitespaces
+
+  throw RangeParserError(expression: expression, type: .incomplete)
+}
