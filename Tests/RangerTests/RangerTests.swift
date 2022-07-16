@@ -31,7 +31,6 @@ final class RangerTests: XCTestCase {
     }
   }
 
-
   func testParseSegment() throws {
 
     let both = [Directionality.past, Directionality.future]
@@ -67,8 +66,26 @@ final class RangerTests: XCTestCase {
       ("w<", "2010-04-12 00:00:00", both),
       ("w>", "2010-04-19 00:00:00", both),
 
+      ("y<", "2010-01-01 00:00:00", both),
+      ("y>", "2011-01-01 00:00:00", both),
+
+      ("L<", "2010-04-01 00:00:00", both),
+      ("L>", "2010-05-01 00:00:00", both),
+
+      ("4L", "2010-08-15 12:35:17", future),
+      ("4L", "2009-12-15 12:35:17", past)
+
     ]
 
+    /*
+    "4w<+2h3m" 2hours 3minutes after start of the week 4 weeks ago
+    "4w<2h3m" 2hours 3minutes before start of the week 4 weeks ago
+
+    "d< ~ 5m" Range from start of today to five minutes after midnight
+    "d< & 5m" Range from start of today to five minutes before midnight
+
+
+     */
     var calendar = Calendar.current
     calendar.firstWeekday = 2
 

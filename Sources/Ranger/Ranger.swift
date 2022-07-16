@@ -37,12 +37,21 @@ extension Directionality {
 
 }
 
+enum Base: String {
+  case now = "*" // or @
+  case epoch = "E"
+  case midnight = "D"
+}
+
 enum Unit: String {
+  case year = "y"
+  case month = "L"
   case day = "d"
+  case week = "w"
   case hour = "h"
   case minute = "m"
   case second = "s"
-  case week = "w"
+  case nanosecond = "n"
 }
 
 enum Operation: String {
@@ -87,11 +96,14 @@ extension Unit {
 
   var component: Calendar.Component {
     switch self {
+    case .year: return .year
+    case .month: return .month
+    case .week: return .weekOfYear
     case .day: return .day
     case .hour: return .hour
     case .minute: return .minute
     case .second: return .second
-    case .week: return .weekOfYear
+    case .nanosecond: return .nanosecond
     }
   }
 
@@ -102,7 +114,6 @@ extension Operation {
   func apply(for unit: Unit, to date: Date, calendar: Calendar) throws -> Date {
     if self == .none { return date }
 
-//    let currentValue = calendar.component(unit.component, from: date)
     let components = calendar.dateComponents([unit.component], from: date)
 
     let referenceDate = calendar.date(byAdding: unit.component, value: -1, to: date)!
@@ -119,11 +130,6 @@ extension Operation {
       result = forwardedResult
     }
 
-    print(components)
-    if #available(macOS 12.0, *) {
-      print(date.formatted(date: .abbreviated, time: .standard))
-      print(result.formatted(date: .abbreviated, time: .standard))
-    }
     return result
   }
 
