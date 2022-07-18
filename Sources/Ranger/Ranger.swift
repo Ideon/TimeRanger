@@ -65,31 +65,6 @@ struct SkipSegment {
 
 }
 
-func parseRange(segment: String, relativeTo date: Date, direction: Directionality, calendar: TimeTraverser = Calendar.current) throws -> Date {
-
-  var real = ""
-
-  var iterator = segment.makeIterator()
-  var current = iterator.next()
-  while let digit = current, digit.isNumber {
-    real.append(digit)
-    current = iterator.next()
-  }
-  guard case let unit?? = current.map({ Unit(rawValue: String($0)) }) else {
-    throw RangeSegmentParserError(segment: segment, type: .incomplete)
-  }
-  let operation = iterator.next().map { Operation(rawValue: String($0)) ?? .none } ?? Operation.none
-  let magnitude = Int(real) ?? 0
-
-  do {
-    return try calendar.date(byApplying: SkipSegment(magnitude: magnitude, unit: unit, operation: operation), to: date, direction: direction)
-  } catch (let error as ParseError) {
-    throw RangeSegmentParserError(segment: segment, type: error)
-  } catch {
-    throw error
-  }
-}
-
 extension TimeTraverser {
 
   public func date(byApplying expression: String, to date: Date, direction: Directionality) throws -> Date {

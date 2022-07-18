@@ -4,8 +4,6 @@ import XCTest
 final class RangerTests: XCTestCase {
 
   func testParseSegmentRelativeToNow() throws {
-    XCTAssertThrowsError(try parseRange(segment: "", relativeTo: Date(), direction: .future), "Empty input is invalid and should throw a RangeParserError")
-
     let referenceDate = Date()
 
     let additionTests: [(String, Date, Directionality)] = [
@@ -21,7 +19,7 @@ final class RangerTests: XCTestCase {
     ]
 
     for (segment, expected, direction) in additionTests {
-      let result = try parseRange(segment: segment, relativeTo: referenceDate, direction: direction)
+      let result = try? Calendar.current.date(byApplying: segment, to: referenceDate, direction: direction)
       XCTAssertEqual(result, expected, "Parsing segment '\(segment)' did not yield expected result")
     }
   }
