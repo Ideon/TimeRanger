@@ -137,12 +137,40 @@ final class RangerTests: XCTestCase {
 
     for (segment, expected, directions) in battery {
       for direction in directions {
-        let result = try? parseRange(segment: segment, relativeTo: referenceDate, direction: direction, calendar: calendar)
+        let result = try? calendar.date(byApplying: segment, to: referenceDate, direction: direction)
         XCTAssertEqual(result, expected.dateValue!, "Parsing segment '\(segment)' \(direction) did not yield expected result")
       }
     }
   }
 
+  func testParserTest() throws {
+    let text = "3md<+4d"
+    do {
+      let values = try parseThing(string: text)
+      print(values)
+    } catch {
+      print(error)
+      XCTFail(error.localizedDescription)
+    }
+  }
+
+
+  func testParseExpression() throws {
+    let referenceDate = "2010-04-15 12:35:17".dateValue! // A Thursday
+    var calendar = Calendar.current
+    calendar.firstWeekday = 2
+
+    let battery: [(String, String)] = [
+      ("2d3h", "2010-04-17 15:35:17"),
+      ("2d-3h", "2010-04-17 09:35:17"),
+      ("2d-3hm<", "2010-04-17 09:35:00"),
+    ]
+
+    for (expression, expected) in battery {
+      let result = try? calendar.date(byApplying: expression, to: referenceDate, direction: .future)
+      XCTAssertEqual(result, expected.dateValue!, "Result of expression '\(expression)' did not yield expected result")
+    }
+  }
 
 }
 
