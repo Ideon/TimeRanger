@@ -22,39 +22,6 @@ public enum ParseError: Error {
   case roundingToUnitFailure
 }
 
-
-public func dateRange(from expression: String) throws -> (Date, Date) {
-  let parts = expression.split(separator: " ", maxSplits: 1, omittingEmptySubsequences: true)
-  do {
-
-    if parts.count == 1 {
-      let firstDate = try Calendar.current.date(byApplying: parts[0].trimmingCharacters(in: .whitespaces), to: Date(), direction: .past)
-      return (firstDate, .distantFuture)
-    }
-
-    guard parts.count > 1
-    else { throw RangeParserError(expression: expression, type: .incomplete) }
-
-    let firstExpression = parts[0].trimmingCharacters(in: .whitespaces)
-    let secondExpression = parts[1].trimmingCharacters(in: .whitespaces)
-
-    let firstDate = try Calendar.current.date(byApplying: firstExpression, to: Date(), direction: .past)
-
-    let secondDate = try Calendar.current.date(byApplying: secondExpression, to: firstDate, direction: .future)
-    return (firstDate, secondDate)
-
-  } catch (let error as ParseError) {
-    throw RangeParserError(expression: expression, type: error)
-  } catch {
-    throw error
-  }
-}
-
-public func dateInterval(from expression: String) throws -> DateInterval {
-  let pair = try dateRange(from: expression)
-  return DateInterval(start: pair.0, end: pair.1)
-}
-
 enum Directionality {
   case past, future
 }
@@ -115,7 +82,7 @@ func parseRange(segment: String, relativeTo date: Date, direction: Directionalit
   let magnitude = Int(real) ?? 0
 
   do {
-    return try calendar.date(byAplying: SkipSegment(magnitude: magnitude, unit: unit, operation: operation), to: date, direction: direction)
+    return try calendar.date(byApplying: SkipSegment(magnitude: magnitude, unit: unit, operation: operation), to: date, direction: direction)
   } catch (let error as ParseError) {
     throw RangeSegmentParserError(segment: segment, type: error)
   } catch {
@@ -125,14 +92,14 @@ func parseRange(segment: String, relativeTo date: Date, direction: Directionalit
 
 extension TimeTraverser {
 
-  func date(byApplying expression: String, to date: Date, direction: Directionality) throws -> Date {
+  public func date(byApplying expression: String, to date: Date, direction: Directionality) throws -> Date {
     var date = date
     var direction = direction
     let result = try expressionParser.parse(expression)
     for token in result {
       switch token {
       case .skip(let segment):
-        date = try self.date(byAplying: segment, to: date, direction: direction)
+        date = try self.date(byApplying: segment, to: date, direction: direction)
       case .sign(let sign):
         direction = sign
       }
@@ -140,9 +107,41 @@ extension TimeTraverser {
     return date
   }
 
-  func date(byAplying skip: SkipSegment, to date: Date, direction: Directionality) throws -> Date {
+  func date(byApplying skip: SkipSegment, to date: Date, direction: Directionality) throws -> Date {
     let result = try self.date(byAdding: skip.unit, value: skip.magnitude * direction.factor, to: date)
     return try skip.operation.apply(for: skip.unit, to: result, calendar: self)
+  }
+
+  public func dateRange(from expression: String) throws -> (Date, Date) {
+    let parts = expression.split(separator: " ", maxSplits: 1, omittingEmptySubsequences: true)
+    do {
+
+      if parts.count == 1 {
+        let firstDate = try self.date(byApplying: parts[0].trimmingCharacters(in: .whitespaces), to: Date(), direction: .past)
+        return (firstDate, .distantFuture)
+      }
+
+      guard parts.count > 1
+      else { throw RangeParserError(expression: expression, type: .incomplete) }
+
+      let firstExpression = parts[0].trimmingCharacters(in: .whitespaces)
+      let secondExpression = parts[1].trimmingCharacters(in: .whitespaces)
+
+      let firstDate = try self.date(byApplying: firstExpression, to: Date(), direction: .past)
+
+      let secondDate = try self.date(byApplying: secondExpression, to: firstDate, direction: .future)
+      return (firstDate, secondDate)
+
+    } catch (let error as ParseError) {
+      throw RangeParserError(expression: expression, type: error)
+    } catch {
+      throw error
+    }
+  }
+
+  public func dateInterval(from expression: String) throws -> DateInterval {
+    let pair = try dateRange(from: expression)
+    return DateInterval(start: pair.0, end: pair.1)
   }
 
 }

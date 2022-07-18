@@ -3,11 +3,6 @@ import XCTest
 
 final class RangerTests: XCTestCase {
 
-  func testDateRange() throws {
-    XCTAssertThrowsError(try dateRange(from: ""), "Empty input is invalid and should throw a RangeParserError")
-  }
-
-
   func testParseSegmentRelativeToNow() throws {
     XCTAssertThrowsError(try parseRange(segment: "", relativeTo: Date(), direction: .future), "Empty input is invalid and should throw a RangeParserError")
 
@@ -142,18 +137,6 @@ final class RangerTests: XCTestCase {
       }
     }
   }
-
-  func testParserTest() throws {
-    let text = "3md<+4d"
-    do {
-      let values = try parseThing(string: text)
-      print(values)
-    } catch {
-      print(error)
-      XCTFail(error.localizedDescription)
-    }
-  }
-
 
   func testParseExpression() throws {
     let referenceDate = "2010-04-15 12:35:17".dateValue! // A Thursday
