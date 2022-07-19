@@ -67,11 +67,10 @@ struct SkipSegment {
 
 extension TimeTraverser {
 
-  public func date(byApplying expression: String, to date: Date, direction: Directionality) throws -> Date {
+  private func date(byApplying tokens: [Token], to date: Date, direction: Directionality) throws -> Date {
     var date = date
     var direction = direction
-    let result = try expressionParser.parse(expression)
-    for token in result {
+    for token in tokens {
       switch token {
       case .skip(let segment):
         date = try self.date(byApplying: segment, to: date, direction: direction)
@@ -82,40 +81,28 @@ extension TimeTraverser {
     return date
   }
 
+  public func date(byApplying expression: String, to date: Date, direction: Directionality) throws -> Date {
+    let result = try expressionParser.parse(expression)
+    return try self.date(byApplying: result, to: date, direction: direction)
+  }
+
   func date(byApplying skip: SkipSegment, to date: Date, direction: Directionality) throws -> Date {
     let result = try self.date(byAdding: skip.unit, value: skip.magnitude * direction.factor, to: date)
     return try skip.operation.apply(for: skip.unit, to: result, calendar: self)
   }
 
-  public func dateRange(from expression: String) throws -> (Date, Date) {
-    let parts = expression.split(separator: " ", maxSplits: 1, omittingEmptySubsequences: true)
-    do {
-
-      if parts.count == 1 {
-        let firstDate = try self.date(byApplying: parts[0].trimmingCharacters(in: .whitespaces), to: Date(), direction: .past)
-        return (firstDate, .distantFuture)
-      }
-
-      guard parts.count > 1
-      else { throw RangeParserError(expression: expression, type: .incomplete) }
-
-      let firstExpression = parts[0].trimmingCharacters(in: .whitespaces)
-      let secondExpression = parts[1].trimmingCharacters(in: .whitespaces)
-
-      let firstDate = try self.date(byApplying: firstExpression, to: Date(), direction: .past)
-
-      let secondDate = try self.date(byApplying: secondExpression, to: firstDate, direction: .future)
-      return (firstDate, secondDate)
-
-    } catch (let error as ParseError) {
-      throw RangeParserError(expression: expression, type: error)
-    } catch {
-      throw error
+  public func range(from expression: String, referenceTime: Date = Date()) throws -> (Date, Date) {
+    let definition = try rangeParser.parse(expression.filter { !$0.isWhitespace })
+    let firstDate = try date(byApplying: definition.first, to: referenceTime, direction: .past)
+    guard let second = definition.second else {
+      return (firstDate, referenceTime)
     }
+    let secondDate = try date(byApplying: second, to: firstDate, direction: .future)
+    return (firstDate, secondDate)
   }
 
   public func dateInterval(from expression: String) throws -> DateInterval {
-    let pair = try dateRange(from: expression)
+    let pair = try range(from: expression)
     return DateInterval(start: pair.0, end: pair.1)
   }
 

@@ -25,7 +25,7 @@ final class RangerTests: XCTestCase {
   }
 
   func testStartOfUnit() throws {
-    let referenceDate = "2010-04-15 12:35:17".dateValue! // A Thursday
+    let referenceDate = "2010-04-15 12:35:17".dateValue // A Thursday
     var calendar = Calendar.current
     calendar.firstWeekday = 2
 
@@ -40,12 +40,12 @@ final class RangerTests: XCTestCase {
 
     for (unit, expected) in battery {
       let result = try? calendar.startOf(unit, for: referenceDate)
-      XCTAssertEqual(result, expected.dateValue!, "Start of '\(unit)' did not yield expected result")
+      XCTAssertEqual(result, expected.dateValue, "Start of '\(unit)' did not yield expected result")
     }
   }
 
   func testDateByAddingUnit() throws {
-    let referenceDate = "2010-04-15 12:35:17".dateValue! // A Thursday
+    let referenceDate = "2010-04-15 12:35:17".dateValue // A Thursday
     let calendar = Calendar.current
 
     let battery: [(Ranger.Unit, Int, String)] = [
@@ -66,7 +66,7 @@ final class RangerTests: XCTestCase {
 
     for (unit, value, expected) in battery {
       let result = try? calendar.date(byAdding: unit, value: value, to: referenceDate)
-      XCTAssertEqual(result, expected.dateValue!, "Adding \(value) '\(unit)' did not yield expected result")
+      XCTAssertEqual(result, expected.dateValue, "Adding \(value) '\(unit)' did not yield expected result")
     }
   }
 
@@ -76,7 +76,7 @@ final class RangerTests: XCTestCase {
     let past = [Directionality.past]
     let future = [Directionality.future]
 
-    let referenceDate = "2010-04-15 12:35:17".dateValue! // A Thursday
+    let referenceDate = "2010-04-15 12:35:17".dateValue // A Thursday
 
     let battery: [(String, String, [Directionality])] = [
       ("d<", "2010-04-15 00:00:00", both),
@@ -122,14 +122,14 @@ final class RangerTests: XCTestCase {
     for (segment, expected, directions) in battery {
       for direction in directions {
         let result = try? calendar.date(byApplying: segment, to: referenceDate, direction: direction)
-        XCTAssertEqual(result, expected.dateValue!, "Parsing segment '\(segment)' \(direction) did not yield expected result")
+        XCTAssertEqual(result, expected.dateValue, "Parsing segment '\(segment)' \(direction) did not yield expected result")
       }
     }
   }
 
   func testParseSignedSegment() throws {
 
-    let referenceDate = "2010-04-15 12:35:17".dateValue! // A Thursday
+    let referenceDate = "2010-04-15 12:35:17".dateValue // A Thursday
 
     let battery: [(String, String)] = [
       ("d<", "2010-04-15 00:00:00"),
@@ -165,7 +165,7 @@ final class RangerTests: XCTestCase {
       ("L>", "2010-05-01 00:00:00"),
 
       ("4L", "2010-08-15 12:35:17"),
-      ("-4L", "2009-12-15 12:35:17")
+      ("-4L", "2009-12-15 12:35:11")
 
     ]
 
@@ -174,7 +174,7 @@ final class RangerTests: XCTestCase {
 
     for (segment, expected) in battery {
       let result = try? calendar.date(byApplying: segment, to: referenceDate, direction: .future)
-      XCTAssertEqual(result, expected.dateValue!, "Parsing segment '\(segment)' did not yield expected result")
+      XCTAssertEqual(result, expected.dateValue, "Parsing segment '\(segment)' did not yield expected result")
     }
   }
 
@@ -189,8 +189,32 @@ final class RangerTests: XCTestCase {
 
    */
 
+  func testParseRange() throws {
+    let referenceDate = "2010-04-15 12:35:17".dateValue // A Thursday
+    var calendar = Calendar.current
+    calendar.firstWeekday = 2
+
+    let battery: [(String, String, String?)] = [
+      ("2d3h", "2010-04-13 09:35:17", nil),
+      ("2d-3h", "2010-04-13 09:35:17", nil),
+      ("2d-3hm<", "2010-04-13 09:35:00", nil),
+      ("2d+3h", "2010-04-13 15:35:17", nil),
+      ("2d+3hm<", "2010-04-13 15:35:00", nil),
+
+      ("2d+3hm< ~ 4s", "2010-04-13 15:35:00", "2010-04-13 15:35:04"),
+    ]
+
+    for (expression, first, second) in battery {
+      let result = try? calendar.range(from: expression, referenceTime: referenceDate)
+      XCTAssertEqual(result?.0, first.dateValue, "First result of expression '\(expression)' did not yield expected result")
+
+      XCTAssertEqual(result?.1, second?.dateValue ?? referenceDate, "Second result of expression '\(expression)' did not yield expected result")
+    }
+
+  }
+
   func testParseExpression() throws {
-    let referenceDate = "2010-04-15 12:35:17".dateValue! // A Thursday
+    let referenceDate = "2010-04-15 12:35:17".dateValue // A Thursday
     var calendar = Calendar.current
     calendar.firstWeekday = 2
 
@@ -202,7 +226,7 @@ final class RangerTests: XCTestCase {
 
     for (expression, expected) in battery {
       let result = try? calendar.date(byApplying: expression, to: referenceDate, direction: .future)
-      XCTAssertEqual(result, expected.dateValue!, "Result of expression '\(expression)' did not yield expected result")
+      XCTAssertEqual(result, expected.dateValue, "Result of expression '\(expression)' did not yield expected result")
     }
   }
 
@@ -218,10 +242,10 @@ extension Date {
 
 private extension String {
 
-  var dateValue: Date? {
+  var dateValue: Date {
       let dateFormatter = DateFormatter()
       dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-      return dateFormatter.date(from: self)
+      return dateFormatter.date(from: self)!
    }
 
 }

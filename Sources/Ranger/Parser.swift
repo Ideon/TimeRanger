@@ -2,13 +2,13 @@ import Parsing
 
 let unit = OneOf {
   for item in Unit.allCases {
-    item.rawValue.utf8.map { item }
+    item.rawValue.map { item }
   }
 }
 
 let operation = OneOf {
   for item in Operation.allCases where item != .none {
-    (item.rawValue.utf8).map { item }
+    (item.rawValue).map { item }
   }
 }
 
@@ -24,8 +24,8 @@ enum Token {
 }
 
 let sign = OneOf {
-  "+".utf8.map { Directionality.future }
-  "-".utf8.map { Directionality.past }
+  "+".map { Directionality.future }
+  "-".map { Directionality.past }
 }.map { Token.sign($0) }
 
 let expressionParser = Many {
@@ -33,4 +33,19 @@ let expressionParser = Many {
     sign
     segment
   }
+}
+
+let rangeParser = Parse(
+  RangeDefinition.init(first:second:)
+) {
+  expressionParser
+  Optionally {
+    "~"
+    expressionParser
+  }
+}
+
+struct RangeDefinition {
+  var first: [Token]
+  var second: [Token]?
 }
