@@ -1,3 +1,3 @@
-# Ranger
+# Codename TimeRanger
 
-A description of this package.
+A compact date and time expression format. Especially focused on working with relative timestamps.
