@@ -116,15 +116,6 @@ final class RangerTests: XCTestCase {
 
     ]
 
-    /*
-    "4w<+2h3m" 2hours 3minutes after start of the week 4 weeks ago
-    "4w<2h3m" 2hours 3minutes before start of the week 4 weeks ago
-
-    "d< ~ 5m" Range from start of today to five minutes after midnight
-    "d< & 5m" Range from start of today to five minutes before midnight
-
-     */
-
     var calendar = Calendar.current
     calendar.firstWeekday = 2
 
@@ -135,6 +126,68 @@ final class RangerTests: XCTestCase {
       }
     }
   }
+
+  func testParseSignedSegment() throws {
+
+    let referenceDate = "2010-04-15 12:35:17".dateValue! // A Thursday
+
+    let battery: [(String, String)] = [
+      ("d<", "2010-04-15 00:00:00"),
+      ("d>", "2010-04-16 00:00:00"),
+      ("h>", "2010-04-15 13:00:00"),
+      ("h<", "2010-04-15 12:00:00"),
+      ("m>", "2010-04-15 12:36:00"),
+      ("m<", "2010-04-15 12:35:00"),
+
+      ("+1h<", "2010-04-15 13:00:00"),
+      ("-1h<", "2010-04-15 11:00:00"),
+
+      ("+1m", "2010-04-15 12:36:17"),
+      ("+52m", "2010-04-15 13:27:17"),
+      ("+52m<", "2010-04-15 13:27:00"),
+
+      ("-1s", "2010-04-15 12:35:16"),
+      ("-17s", "2010-04-15 12:35:00"),
+      ("-18s", "2010-04-15 12:34:59"),
+      ("+1s", "2010-04-15 12:35:18"),
+      ("+55s", "2010-04-15 12:36:12"),
+
+      ("-1w", "2010-04-08 12:35:17"),
+      ("+1w", "2010-04-22 12:35:17"),
+
+      ("w<", "2010-04-12 00:00:00"),
+      ("w>", "2010-04-19 00:00:00"),
+
+      ("y<", "2010-01-01 00:00:00"),
+      ("y>", "2011-01-01 00:00:00"),
+
+      ("L<", "2010-04-01 00:00:00"),
+      ("L>", "2010-05-01 00:00:00"),
+
+      ("4L", "2010-08-15 12:35:17"),
+      ("-4L", "2009-12-15 12:35:17")
+
+    ]
+
+    var calendar = Calendar.current
+    calendar.firstWeekday = 2
+
+    for (segment, expected) in battery {
+      let result = try? calendar.date(byApplying: segment, to: referenceDate, direction: .future)
+      XCTAssertEqual(result, expected.dateValue!, "Parsing segment '\(segment)' did not yield expected result")
+    }
+  }
+
+
+
+  /*
+  "4w<+2h3m" 2hours 3minutes after start of the week 4 weeks ago
+  "4w<2h3m" 2hours 3minutes before start of the week 4 weeks ago
+
+  "d< ~ 5m" Range from start of today to five minutes after midnight
+  "d< & 5m" Range from start of today to five minutes before midnight
+
+   */
 
   func testParseExpression() throws {
     let referenceDate = "2010-04-15 12:35:17".dateValue! // A Thursday

@@ -22,7 +22,7 @@ public enum ParseError: Error {
   case roundingToUnitFailure
 }
 
-enum Directionality {
+public enum Directionality {
   case past, future
 }
 
@@ -40,7 +40,7 @@ enum Base: String {
   case midnight = "D"
 }
 
-enum Unit: String, CaseIterable {
+public enum Unit: String, CaseIterable {
   case year = "y"
   case month = "L"
   case day = "d"
@@ -152,7 +152,7 @@ extension Operation {
 
 }
 
-protocol TimeTraverser {
+public protocol TimeTraverser {
 
   func date(byAdding unit: Unit, value: Int, to date: Date) throws -> Date
   func startOf(_ unit: Unit, for date: Date) throws -> Date
@@ -161,13 +161,13 @@ protocol TimeTraverser {
 
 extension Calendar: TimeTraverser {
 
-  func date(byAdding unit: Unit, value: Int, to date: Date) throws -> Date {
+  public func date(byAdding unit: Unit, value: Int, to date: Date) throws -> Date {
     guard let result = self.date(byAdding: unit.component, value: value, to: date)
     else { throw ParseError.invalidTimeAddition }
     return result
   }
 
-  func startOf(_ unit: Unit, for date: Date) throws -> Date {
+  public func startOf(_ unit: Unit, for date: Date) throws -> Date {
     let components = dateComponents([unit.component], from: date)
     let startingDate = try self.date(byAdding: unit, value: -1, to: date)
     guard let result = nextDate(after: startingDate, matching: components, matchingPolicy: .nextTime, repeatedTimePolicy: .first, direction: .forward)

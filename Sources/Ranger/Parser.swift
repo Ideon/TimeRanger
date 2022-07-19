@@ -1,9 +1,5 @@
 import Parsing
 
-func parseThing(string: String) throws -> Any {
-  return try expressionParser.parse(string)
-}
-
 let unit = OneOf {
   for item in Unit.allCases {
     item.rawValue.utf8.map { item }
