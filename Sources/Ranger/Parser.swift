@@ -12,7 +12,7 @@ let operation = OneOf {
   }
 }
 
-let segment = Parse(SkipSegment.init(magnitude:unit:operation:)) {
+let segment = Parse(input: Substring.self, SkipSegment.init(magnitude:unit:operation:)) {
   Optionally { Digits() }.map { $0 ?? 0 }
   unit
   operation.replaceError(with: .none)
