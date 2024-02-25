@@ -21,6 +21,7 @@ let segment = Parse(input: Substring.self, SkipSegment.init(magnitude:unit:opera
 
 let segmentReset = Parse(input: Substring.self) {
   unit
+  Not { operation }
 }.map { Token.boundary($0) }
 
 let dateFormat = Parse(input: Substring.self) {
