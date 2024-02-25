@@ -15,6 +15,13 @@ public struct RangeSegmentParserError: Error {
 
 }
 
+public struct InvalidDateFormatError: Error {
+  
+  public var dateString: String
+  
+}
+
+
 public enum ParseError: Error {
   case incomplete
   case arithmeticFailure
@@ -72,10 +79,16 @@ extension TimeTraverser {
     var direction = direction
     for token in tokens {
       switch token {
+      case .date(let override):
+        date = override
+      case .boundary(let unit):
+        date = try self.date(atBoundry: unit, of: date, direction: direction)
       case .skip(let segment):
         date = try self.date(byApplying: segment, to: date, direction: direction)
       case .sign(let sign):
         direction = sign
+      case .error(let error):
+        throw error
       }
     }
     return date
@@ -85,7 +98,11 @@ extension TimeTraverser {
     let result = try expressionParser.parse(expression)
     return try self.date(byApplying: result, to: date, direction: direction)
   }
-
+  
+  public func date(atBoundry unit: Unit, of date: Date, direction: Directionality) throws -> Date {
+    try unit.boundary(of: date, direction: direction, calendar: self)
+  }
+    
   func date(byApplying skip: SkipSegment, to date: Date, direction: Directionality) throws -> Date {
     let result = try self.date(byAdding: skip.unit, value: skip.magnitude * direction.factor, to: date)
     return try skip.operation.apply(for: skip.unit, to: result, calendar: self)
@@ -102,7 +119,7 @@ extension TimeTraverser {
   }
   
   public func dateInterval(from expression: String, referenceTime: Date = Date()) throws -> DateInterval {
-    let pair = try range(from: expression, referenceTime: referenceTime)    
+    let pair = try range(from: expression, referenceTime: referenceTime)
     return DateInterval(start: min(pair.0,pair.1), end: max(pair.0,pair.1))
   }
 
@@ -123,6 +140,19 @@ extension Unit {
     }
   }
 
+}
+
+extension Unit {
+  
+  func boundary(of date: Date, direction: Directionality, calendar: TimeTraverser) throws -> Date {
+    let start = try calendar.startOf(self, for: date)
+    if direction == .future {
+      return try calendar.date(byAdding: self, value: 1, to: start)
+    } else {
+      return start
+    }
+  }
+  
 }
 
 extension Operation {
@@ -164,4 +194,33 @@ extension Calendar: TimeTraverser {
     return result
   }
 
+}
+
+
+public extension DateFormatter {
+  
+  class func date(from string: String) throws -> Date {
+    let dateFormatter = DateFormatter()
+    dateFormatter.locale = Locale.init(identifier: "en_US_POSIX")
+    dateFormatter.timeZone = .autoupdatingCurrent
+        
+    var segments = ["yyyy","-MM","-dd"," HH",":mm",":ss"]
+    let suffixes = [
+      "ZZZZZ",
+      "",
+    ]
+    
+    repeat {
+      for suffix in suffixes {
+        dateFormatter.dateFormat = segments.joined() + suffix
+        if let result = dateFormatter.date(from: string) {
+          return result
+        }
+      }
+      segments.removeLast()
+    } while !segments.isEmpty
+
+    throw InvalidDateFormatError(dateString: string)
+  }
+  
 }
