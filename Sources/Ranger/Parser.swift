@@ -1,4 +1,5 @@
 import Parsing
+import Foundation
 
 let unit = OneOf {
   for item in Unit.allCases {
@@ -18,9 +19,29 @@ let segment = Parse(input: Substring.self, SkipSegment.init(magnitude:unit:opera
   operation.replaceError(with: .none)
 }.map { Token.skip($0) }
 
+let segmentReset = Parse(input: Substring.self) {
+  unit
+  Not { operation }
+}.map { Token.boundary($0) }
+
+let dateFormat = Parse(input: Substring.self) {
+  "@"
+  PrefixUpTo("@").map {
+    do {
+      return try Token.date(DateFormatter.date(from: String($0)))
+    } catch {
+      return Token.error(error)
+    }
+  }
+  "@"
+}
+
 enum Token {
+  case boundary(Unit)
   case skip(SkipSegment)
   case sign(Directionality)
+  case date(Date)
+  case error(Error)
 }
 
 let sign = OneOf {
@@ -30,8 +51,10 @@ let sign = OneOf {
 
 let expressionParser = Many {
   OneOf {
+    dateFormat
     sign
-    segment
+    segmentReset
+    segment    
   }
 }
 
@@ -40,7 +63,7 @@ let rangeParser = Parse(
 ) {
   expressionParser
   Optionally {
-    "~"
+    OneOf { "~";"^" }
     expressionParser
   }
 }

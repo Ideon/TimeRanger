@@ -7,7 +7,10 @@ final class RangerTests: XCTestCase {
     let referenceDate = Date()
 
     let additionTests: [(String, Date, Directionality)] = [
-      ("d", referenceDate.adding(0, .day), .future),
+      ("d", Calendar.current.startOfDay(for: referenceDate.adding(1, .day)), .future),
+      ("d", Calendar.current.startOfDay(for: referenceDate), .past),
+      ("L", try! Calendar.current.startOf(.month, for: referenceDate), .past),
+      ("0d", referenceDate.adding(0, .day), .future),
       ("5d", referenceDate.adding(5, .day), .future),
       ("41034h", referenceDate.adding(41034, .hour), .future),
       ("5d<", Calendar.current.startOfDay(for: referenceDate.adding(5, .day)), .future),
@@ -165,7 +168,7 @@ final class RangerTests: XCTestCase {
       ("L>", "2010-05-01 00:00:00"),
 
       ("4L", "2010-08-15 12:35:17"),
-      ("-4L", "2009-12-15 12:35:11")
+      ("-4L", "2009-12-15 12:35:17")
 
     ]
 

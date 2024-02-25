@@ -13,9 +13,13 @@ let package = Package(
         .library(
             name: "TimeRanger",
             targets: ["Ranger"]),
+        
+        .executable(name: "timeranger", targets: ["RangerCLI"]),
     ],
     dependencies: [
-      .package(url: "https://github.com/pointfreeco/swift-parsing.git", from: "0.12.0")
+      .package(url: "https://github.com/pointfreeco/swift-parsing.git", from: "0.13.0"),
+      .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
+      .package(url: "https://github.com/mxcl/Chalk.git", from: "0.5.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -28,5 +32,10 @@ let package = Package(
         .testTarget(
             name: "RangerTests",
             dependencies: ["Ranger"]),
+        .executableTarget(name: "RangerCLI", dependencies: [
+          "Ranger",
+          .product(name: "Chalk", package: "Chalk"),
+          .product(name: "ArgumentParser", package: "swift-argument-parser"),
+        ])
     ]
 )
