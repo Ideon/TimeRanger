@@ -102,8 +102,8 @@ extension TimeTraverser {
   }
   
   public func dateInterval(from expression: String, referenceTime: Date = Date()) throws -> DateInterval {
-    let pair = try range(from: expression, referenceTime: referenceTime)
-    return DateInterval(start: pair.0, end: pair.1)
+    let pair = try range(from: expression, referenceTime: referenceTime)    
+    return DateInterval(start: min(pair.0,pair.1), end: max(pair.0,pair.1))
   }
 
 }
