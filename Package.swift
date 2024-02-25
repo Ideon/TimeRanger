@@ -14,7 +14,7 @@ let package = Package(
             name: "TimeRanger",
             targets: ["Ranger"]),
         
-        .executable(name: "ranger", targets: ["RangerCLI"]),
+        .executable(name: "timeranger", targets: ["RangerCLI"]),
     ],
     dependencies: [
       .package(url: "https://github.com/pointfreeco/swift-parsing.git", from: "0.13.0"),
@@ -31,7 +31,7 @@ let package = Package(
             ]),
         .testTarget(
             name: "RangerTests",
-            dependencies: ["Ranger"]),        
+            dependencies: ["Ranger"]),
         .executableTarget(name: "RangerCLI", dependencies: [
           "Ranger",
           .product(name: "Chalk", package: "Chalk"),
